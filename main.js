@@ -23,7 +23,7 @@ cognitoidentityserviceprovider.getUser(params, function(err, data) {
     if (err) 
     {
         // Change - Link to the Home Page
-        window.location.href = 'https://marrimadhava.github.io/binank.github.io/'
+        window.location.href = ''
     }
     else 
     {
