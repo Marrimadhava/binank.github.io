@@ -1,54 +1,52 @@
-const url = window.location.href
-const replacedURL = url.replace('#', '&')
-const finalURL = new URLSearchParams(replacedURL)
-var accessToken = finalURL.get('access_token')
-var idToken = finalURL.get("id_token")
-var UserName, UserEmail;
+// Extract tokens from URL
+const url = new URL(window.location.href);
+const accessToken = url.searchParams.get('access_token');
+const idToken = url.searchParams.get('id_token');
 
-// Change - Your region
-aws_region = 'us-east-1';
-AWS.config.region = aws_region; 
+if (!accessToken) {
+    console.error("Access token not found in URL. Redirecting to home.");
+    window.location.href = 'https://marrimadhava.github.io/binank.github.io/';
+}
 
-AWS.config.apiVersions = {
-    cognitoidentityserviceprovider: '2016-04-18'
-}; 
+// AWS SDK Configuration
+const awsRegion = 'us-east-1';
+AWS.config.update({
+    region: awsRegion,
+    apiVersions: {
+        cognitoidentityserviceprovider: '2016-04-18',
+    },
+});
 
-var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider(); 
+// Cognito Service Provider
+const cognitoServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
-var params = {
-    AccessToken:  accessToken
-};
+const params = { AccessToken: accessToken };
 
-cognitoidentityserviceprovider.getUser(params, function(err, data) {
-    if (err) 
-    {
-        // Change - Link to the Home Page
-        window.location.href = 'https://marrimadhava.github.io/binank.github.io/'
-    }
-    else 
-    {
-        console.log(data);
+cognitoServiceProvider.getUser(params, (err, data) => {
+    if (err) {
+        console.error("Error fetching user:", err);
+        window.location.href = 'https://marrimadhava.github.io/binank.github.io/';
+    } else {
+        console.log("User data:", data);
 
-        for(var i = 0; i < data.UserAttributes.length; i++)
-        {
-            if(data.UserAttributes[i].Name == 'name')
-            {
-                UserName = data.UserAttributes[i].Value;
-            }
-        }
+        let userName = "";
+        let userEmail = "";
 
-        for(var j = 0; j < data.UserAttributes.length; j++)
-        {
-            if(data.UserAttributes[j].Name == 'email')
-            {
-                UserEmail = data.UserAttributes[j].Value;
-            }
-        }
+        // Extract user attributes
+        data.UserAttributes.forEach(attribute => {
+            if (attribute.Name === 'name') userName = attribute.Value;
+            if (attribute.Name === 'email') userEmail = attribute.Value;
+        });
 
-        document.getElementById('userName').innerHTML = UserName;
-        document.getElementById('userEmail').innerHTML = UserEmail;  
+        // Update DOM elements safely
+        const userNameElement = document.getElementById('userName');
+        const userEmailElement = document.getElementById('userEmail');
+        const userNameInput = document.getElementById('userNameInput');
+        const userEmailInput = document.getElementById('userEmailInput');
 
-        document.getElementById('userNameInput').value =UserName;
-        document.getElementById('userEmailInput').value = UserEmail;    
+        if (userNameElement) userNameElement.textContent = userName;
+        if (userEmailElement) userEmailElement.textContent = userEmail;
+        if (userNameInput) userNameInput.value = userName;
+        if (userEmailInput) userEmailInput.value = userEmail;
     }
 });
